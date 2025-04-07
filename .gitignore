@@ -1,1 +1,8 @@
 venv/
+bin/
+etc/
+lib/
+bin/jsonschema
+share/
+pyvenv.cfg
+lib64
