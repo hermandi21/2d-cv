@@ -6,3 +6,4 @@ bin/jsonschema
 share/
 pyvenv.cfg
 lib64
+eigen-3.4.0
