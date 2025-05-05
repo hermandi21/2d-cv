@@ -1,33 +1,70 @@
-import sobel_demo as nd
 import numpy as np
-from skimage import io
 import matplotlib.pyplot as plt
+from skimage import io
 import time
+import sobel_demo as nd # Import the C++ module
+from sobel import rgb_2_gray # Import the missing function
 
-
-def rgb_2_gray(img, mode='lut'):
-    if mode == 'lut':
-        return np.round(img[:,:,0] * 0.2126 + img[:,:,1] * 0.7152 + img[:,:,2] * 0.0722)
-    else:
-        return np.round(img[:,:,0] * 0.2126 + img[:,:,1] * 0.587 + img[:,:,2] * 0.114)
-
-
+# Load the image
 img = io.imread("lena.jpg")
+
+# Convert image to grayscale
 gray = rgb_2_gray(img).astype("float64")
 
-# TODO: define filters in x in y direction
-
-start = time.time()
-# TODO: filter image in x direction (nd.sobel(gray, filter_x))
-end = time.time()
-duration = end-start
-print("Duration in milliseconds: ", duration*1000)
+# Define Sobel filters
+filter_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], dtype="float64")
+filter_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]], dtype="float64")
 
 
 start = time.time()
-# TODO: filter image in y direction (nd.sobel(gray, filter_y))
+# Filter image in x direction
+filtered_x = nd.sobel(gray, filter_x)
 end = time.time()
 duration = end-start
-print("Duration in milliseconds: ", duration*1000)
+print("Duration C++ (x-direction) in milliseconds: ", duration*1000)
 
-# TODO compute Gradient magnitude
+
+start = time.time()
+# Filter image in y direction
+filtered_y = nd.sobel(gray, filter_y)
+end = time.time()
+duration = end-start
+print("Duration C++ (y-direction) in milliseconds: ", duration*1000)
+
+# Compute Gradient magnitude
+gradient_magnitude = np.sqrt(filtered_x**2 + filtered_y**2)
+
+# Normalize magnitude for display
+gradient_magnitude = (gradient_magnitude / np.max(gradient_magnitude) * 255).astype(np.uint8)
+
+# Display the results
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 3, 1)
+plt.imshow(gray[1:-1, 1:-1], cmap='gray') # Adjust gray image size to match filtered output
+plt.title('Original (Cropped)')
+plt.axis('off')
+
+plt.subplot(1, 3, 2)
+plt.imshow(gradient_magnitude, cmap='gray')
+plt.title('Sobel Gradient Magnitude (C++)')
+plt.axis('off')
+
+# Optional: Display individual x and y gradients
+# Normalize gradients for display
+filtered_x_display = ((filtered_x - np.min(filtered_x)) / (np.max(filtered_x) - np.min(filtered_x)) * 255).astype(np.uint8)
+filtered_y_display = ((filtered_y - np.min(filtered_y)) / (np.max(filtered_y) - np.min(filtered_y)) * 255).astype(np.uint8)
+
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.imshow(filtered_x_display, cmap='gray')
+plt.title('Sobel X Gradient (C++)')
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.imshow(filtered_y_display, cmap='gray')
+plt.title('Sobel Y Gradient (C++)')
+plt.axis('off')
+
+
+plt.show()
